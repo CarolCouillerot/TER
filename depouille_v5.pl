@@ -2,6 +2,8 @@
 # ROLE : lit les textes txt et cherche les langues
  # modif apres proposition JE
 #----------------------------------------
+# Ces variables globales sont utilisées dans parcours et traite_texte,
+#  elles sont aussi redéclarées dans lecture
   my $nb_langues = 0;
   my $nb_fausses_langues = 0;
   my $nb_pays = 0;
@@ -23,11 +25,11 @@
 #lance("test.txt", "resultats_test.csv", "erreurs_test.txt");
 #lance("textes_ACL.txt", "resultats_ACL.csv", "erreurs_ACL.txt", "corpus_ACL.txt");
 #lance("textes_LREC.txt", "resultats_LREC.csv", "erreurs_LREC.txt", "corpus_LREC.txt");
-#concordance("corpus_tout.txt");
-repertorie_langues("corpus_tout.txt", "langues3.csv", "resultats_tout_v4.csv", "erreurs_tout.txt");
+#concordance("corpus_ACL.txt");
+#repertorie_langues("corpus_ACL-0.txt", "langues3.csv", "resultats_tout_v4.csv", "erreurs_tout.txt");
 #repertorie_langues("corpus_test.txt", "resultats_test.csv", "erreurs_test.txt");
 #traitement_paires("res_paires_complement.txt", "res_paires_complement2.txt");
-
+pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
 
 #----------------------------------------
 # IN : fichier TRACE nettoyé
@@ -122,6 +124,7 @@ sub pretraitements {
   close(RES);
   close(ERR);
 }
+
 #----------------------------------------
 # recherche des langues et couples de langues
 sub repertorie_langues {
@@ -139,6 +142,9 @@ sub repertorie_langues {
 }
 #-------------------------------------------
 #recherche des langues
+#variables globales utilisées :
+# - nb_fausses_langues, incrémenté dans parcours
+# - nb_langues, incrémenté dans parcours
 sub traite_texte {
 	my $texte = $_[0];
 	my $i;
@@ -249,8 +255,8 @@ sub parcours {
 		$tab_langues[$nb_langues] = $langue;
 		print TRACE ("\n  $nb_langues $langue");
 		$nb_langues++;
-		}
 	}
+  }
   print STDOUT ("\nnb_langues = $nb_langues");
   close(IN);
   #............................................................liste de fausses langues
@@ -283,11 +289,10 @@ sub parcours {
     #print TRACE ("\n $i $tab_pays[$i]");
 	#print RES (";$tab_pays[$i]");
 	#$i++;
-  #}
+  # }
 
   open(IN, "<$donnees ")|| die "Je ne peux ouvrir le fichier $fic $!";
-  while ($debut_texte eq 'false') {
-	$line = <IN>;
+  while ($line = <IN> and $debut_texte eq 'false') {
 	chop($line);
 	if ($line =~m /^  (.*)$/) {
 		$fic = $1;
@@ -324,7 +329,6 @@ sub parcours {
   print STDOUT ("\n$nb_textes textes traites");
   print TRACE ("\n$nb_textes textes traites");
 }
-
 
 
 #----------------------------------------
@@ -449,12 +453,17 @@ sub lecture {
 	$n1 = length($texte);
 	$n2 = length($ref);
 	close TRACE; open(TRACE, ">>trace.txt ");
-    print TRACE ("\n sans les references (reste ", $n1/($n1+$n2)*100, "%)");
-	if (($n1/($n1+$n2)*100) < 72) {
-		print ERR ("\n\n-----------------$fic");
-		print ERR ("\n sans les references (reste ", $n1/($n1+$n2)*100, "%)");
-		print ERR ("\nContrôle references : $ref");
+    if($n1+$n2>0){
+		print TRACE ("\n sans les references (reste ", $n1/($n1+$n2)*100, "%)");
+		if (($n1/($n1+$n2)*100) < 72) {
+			print ERR ("\n\n-----------------$fic");
+			print ERR ("\n sans les references (reste ", $n1/($n1+$n2)*100, "%)");
+			print ERR ("\nContrôle references : $ref");
+		}
+	}else{
+		print "\nSelection vide : $fic\n";
 	}
+	
 	#print RES ("\n texte de ", $n, " caracteres");
 	#print TRACE ("\n\nTEXTE 1 : '$texte'"); close TRACE; open(TRACE, ">>trace.txt ");
     if ($ref_trouvees eq 'true') {
@@ -484,14 +493,20 @@ sub lecture {
 	if ($abstract_trouve eq 'false') {
 		print ERR ("\n\n-----------------$fic");
 		print ERR ("\nPas d'abstract : $fic");
-		}
-    print TRACE ("\n sans les auteurs (reste ", $n4/$n3*100, "%)");
-
-	if ($n4/$n3*100 < 93) {
-		print ERR ("\n\n-----------------$fic");
-		print ERR ("\n sans les auteurs (reste ", $n4/$n3*100, "%)");
-		print ERR ("\nContrôle auteurs : $auteurs");
 	}
+    
+    if($n3>0){
+		print TRACE ("\n sans les auteurs (reste ", $n4/$n3*100, "%)");
+
+		if ($n4/$n3*100 < 93) {
+			print ERR ("\n\n-----------------$fic");
+			print ERR ("\n sans les auteurs (reste ", $n4/$n3*100, "%)");
+			print ERR ("\nContrôle auteurs : $auteurs");
+		}
+	}else{
+		print print "Texte vide : $fic\n";
+	}
+	
 	#print TRACE ("\n\n TEXTE : $texte");
     #............................................................recherche des langues
 	#................ destruction d'expressions generatrices de bruit (fausses langues)
