@@ -8,6 +8,7 @@ my $fileName;
 my $file;
 my $matchIntro;
 my $matchRef;
+my $matchTitle;
 my $noMatchIntro;
 my $noMatchRef;
 
@@ -17,6 +18,7 @@ my $nbIntro = 0;
 my $nbIntroXml = 0;
 my $nbRef = 0;
 
+my $fontStruct;
 
 open ($noMatchIntro, ">noMatchIntro.txt");
 open ($noMatchRef, ">noMatchRef.txt");
@@ -25,7 +27,7 @@ open ($matchSpec, ">matchSpec.txt");
 opendir(DIR, $dirName) or die "Could not open !! $dir\n";
 
 while (my $subDirName = readdir(DIR)) {
-  if ($subDirName =~m /P[0|1][0-9]/){
+  #if ($subDirName =~m /P[0|1][0-9]/){
 	  opendir($subDir, "$dirName$subDirName") or die "Could not open ! $subDir\n";
 	  
 	  while (my $fileName = readdir($subDir)) {
@@ -44,7 +46,7 @@ while (my $subDirName = readdir(DIR)) {
 				  }
 				  
 				  
-				  if($line =~m /^?([0-9]|[0-9] |[0-9]. )?(Introduction|I ?N ?T ?R ?O ?D ?U ?C ?T ?I ?O ?N)\.?\n$/){
+				  if($line =~m /^?([0-9]|[0-9] |[0-9]. )?(Introduction|INTRODUCTION|I ?N ?T ?R ?O ?D ?U ?C ?T ?I ?O ?N)\.?\n$/){
 					  ++$matchIntro;
 				  }
 			  }
@@ -66,16 +68,18 @@ while (my $subDirName = readdir(DIR)) {
 			  
 			  $nbXml++;
 			  
+			  $fontStruct = "";
 			  $matchIntro = 0;
-			  $matchRef = 0;
+			  $matchTitle = 0;
 			  while (my $line = <$file>) {
 				  
-				  if(!$matchIntro and $line =~m />?([0-9]|[0-9] |[0-9]. )?(Introduction|I ?N ?T ?R ?O ?D ?U ?C ?T ?I ?O ?N)\.?<\//){
+				  if(!$matchIntro and $line =~m /(height="[0-9]+").*>?([0-9]|[0-9] |[0-9]. )?(Introduction|I ?N ?T ?R ?O ?D ?U ?C ?T ?I ?O ?N)\.?<\//){
 					  ++$matchIntro;
+					  $fontStruct = $1;
+					  #print "$fileName : $fontStruct\n";
+				  }elsif($matchIntro and !$matchTitle and $line =~m /$fontStruct/){
+					  $matchTitle++;
 					  #print "$fileName : $line";
-				  #}elsif(){
-					#  ++$matchIntro;
-					#  print "$fileName : $line";
 				  }
 			  }
 			  if($matchIntro){
@@ -89,7 +93,7 @@ while (my $subDirName = readdir(DIR)) {
 	  }
 	  
 	  closedir($subDir);
-  }
+  #}
 }
 
 print "Nombre de fichiers : $nbFile.\n";
