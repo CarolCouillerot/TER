@@ -1,3 +1,7 @@
+##################################################
+# SCRIPT À EXÉCUTER APRÈS LE SCRIPT links_LREC.sh
+# 
+## DESCRIPTION :
 # Le but ici est de télécharger tous les pdf du dossier LREC, dont les liens se trouvent dans des fichiers nommés link.
 # wget permet de télécharger un fichier.
 # wget -i récupère toutes les adresses contenus dans le fichier mis en paramètre.
