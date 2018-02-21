@@ -1,6 +1,10 @@
-# récupère les liens menant aux listes de pdf
+###############################################
+# Récupère les liens menant aux listes de pdf,
+##
+# Utilise curl pour télécharger les pages html puis grep pour rechercher les liens correspondant aux motifs voulus.
+# Les motifs sont simples à trouver car le site source formatise rigoureusement ses liens.
 
-mv ACL/ P/
+mv ACL/ P/ #Au cas où le dossier ACL existe déjà
 curl "https://aclweb.org/anthology/" > base
 grep -e "P/[A-Z0-9]\{3\}/" ./base -o > result # suffixes des liens
 rm base

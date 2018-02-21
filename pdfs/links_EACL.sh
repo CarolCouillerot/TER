@@ -1,4 +1,8 @@
-# récupère les liens menant aux listes de pdf
+###############################################
+# Récupère les liens menant aux listes de pdf,
+##
+# Utilise curl pour télécharger les pages html puis grep pour rechercher les liens correspondant aux motifs voulus.
+# Les motifs sont simples à trouver car le site source formatise rigoureusement ses liens.
 
 mv EACL/ E/
 curl "https://aclweb.org/anthology/" > base
