@@ -1,4 +1,4 @@
-# Le but ici est de télécharger tous les pdf du dossier CL
+# Le but ici est de télécharger tous les pdf du dossier CL, dont les liens se trouvent dans des fichiers nommés link.
 # wget permet de télécharger un fichier.
 # wget -i récupère toutes les adresses contenus dans le fichier mis en paramètre.
 # wget -nc ne télécharge pas le fichier s'il est déjà présent dans le dossier.
