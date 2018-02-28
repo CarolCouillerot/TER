@@ -24,6 +24,7 @@ my $createdFile;
 # Variables booléennes
 my $matchIntro;
 my $matchLine;
+my $matchRef;
 # Variables incrémentées
 my $nbTreatedFiles = 0;
 my $nbMatchIntro = 0;
@@ -55,13 +56,13 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 				
 				$matchIntro = 0;
 				$matchTitle = 0;
-				while (my $line = <$xmlFile> and (!$matchIntro or !$matchTitle)) {
+				$matchRef = 0;
+				while (my $line = <$xmlFile>) {
 					# 1- On cherche la ligne Introduction et on enregistre sa taille d'écriture
 					# 2- On cherche la prochaine ligne possédant cette taille d'écriture
 					# 3- On enregistre la première ligne d'une longueur suffisante après la ligne trouvée en 2-
 					# 4- (en dehors de ce while) On cherche la première ligne du fichier txt matchant avec la ligne trouvée en 3-
 					# Explication rapide : les lignes du fichier xml (débarassées de leurs balises) sont nêtement plus petites et fractionnées que celles du fichier txt, et parfois pas dans le même ordre (je pense aux titres et à leurs numéros, par exemple)
-					
 					if(!$matchIntro and $line =~m /(font="[0-9]+").*>?([0-9]|[0-9] |[0-9]. )?(Introduction|INTRODUCTION)\.?<\//){
 						# 1- Introduction trouvée
 						++$matchIntro;
@@ -70,8 +71,9 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 						$fontLine = $line;
 					}elsif($matchIntro and !$matchTitle and $line =~m /$fontStruct/){
 						# 2- Prochaine ligne de même taille de police trouvée
-						$matchTitle++;
-					}		
+						++$matchTitle;
+					}
+					if($matchTitle and !$matchRef) {		
 						# do{
 						 #	while($line =~m />(.+)</){ # On se débarasse (maladroitement) des balises
 							#	 $line = $1;
@@ -81,11 +83,16 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 							
 						 #	$line = <$xmlFile>;
 						# }while(length($goodLine) < 4); # 3- On prend la prochaine ligne de taille suffisante
-					while($line =~m /(^.*?)<(.+?)>(.*$)/){
-						$line = $1.$3;
+						while($line =~m /(^.*?)<(.+?)>(.*$)/){
+							$line = $1.$3;
+						}
+						if ($line =~m /^([0-9]+(\.)*[  \t]+R[eé]f[eé]rences?|R[eé]f[eé]rences?|[0-9]+\.[  \t]+Bibliography|Bibliography|[0-9]+(\.)*[  \t]+Bibliographical References|Bibliographical References|5HIHUHQFHV)/i) {
+							$matchRef++;
+						}else{
+							$content .= "$line\n";
+						} 
 					}
-					$content .= "$line\n"; 
-				
+					# print("$matchTitle\t");
 				}
 				open($createdFile, ">$dirName$subDirName/$createdFileName") or die "Could not open : $createdFileName\n";
 				print $createdFile  "$content";

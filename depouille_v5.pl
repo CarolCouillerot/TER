@@ -338,6 +338,9 @@ sub parcours {
 # - pas de "@"
 # - "@" après "abstract"
 # lecture des donnees
+# sépare titre, auteurs, référence et enlève fausses langues et écrit les bonnes langues
+# das resultat_lecture.csv
+# a faire : virer les pays
 sub lecture {
   my $donnees = $_[0];
   my $line;
@@ -516,6 +519,7 @@ sub lecture {
 
     $i = 0;
 	$marque = "";
+	# boucle qui remplace une fausse langue par un espace
     while ($i < $nb_fausses_langues) {
 		#print TRACE ("\n*** cherche $i '$tab_fausses_langues[$i]' \n dans : '$texte'");
 		$langue = $tab_fausses_langues[$i];
