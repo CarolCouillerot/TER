@@ -20,6 +20,7 @@ my $xmlFile;
 # Fichier écrit
 my $createdFileName;
 my $createdFile;
+my $filesList;
 
 # Variables booléennes
 my $matchIntro;
@@ -32,6 +33,7 @@ my $nbMatchIntro = 0;
 my $fontStruct;
 my $fontLine;
 
+open($filesList, ">textes_adresses.txt") or die "Could not create textes_adresses";
 opendir(DIR, $dirName) or die "Could not open !! $dir\n";
 
 while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
@@ -40,7 +42,9 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 		
 		while (my $fileName = readdir($subDir)) {
 			if ($fileName =~m /(^.*)traite.txt$/) {
-
+				
+				print $filesList $dirName.$subDirName."/".$fileName."\n";
+				
 				open($txtFile, "<$dirName$subDirName/$fileName") or die "Could not open : $fileName\n";
 				
 				$nbTreatedFiles++;
@@ -67,4 +71,5 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 print "Nombre de fichiers traités : $nbTreatedFiles.\n";
 print "Nombre d'Intro trouvés : $nbMatchIntro.\n";
 
+close($filesList);
 closedir(DIR);
