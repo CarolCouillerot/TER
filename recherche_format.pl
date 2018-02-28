@@ -22,6 +22,8 @@ my $matchTitle;
 # Fichiers écrits
 my $noMatchIntro; #Contient les noms de fichiers txt où aucune Introduction n'a été trouvé
 my $noMatchRef; #Contient les noms de fichiers txt où aucune Bibliographie n'a été trouvé
+my $secondTitles; #Contient les deuxièmes titres trouvés pour chaque fichier xml
+my $firstLongLine; #Contient les longues lignes (sans balisage) de chaque fichier xml à matcher dans leurs équivalents txt
 
 # Variables incrémentées
 my $nbFile = 0;
@@ -35,7 +37,8 @@ my $fontStruct;
 
 open ($noMatchIntro, ">noMatchIntro.txt");
 open ($noMatchRef, ">noMatchRef.txt");
-open ($matchSpec, ">matchSpec.txt");
+open ($secondTitles, ">secondTitles.txt");
+open ($firstLongLine, ">firstLongLine.txt");
 
 opendir(DIR, $dirName) or die "Could not open !! $dir\n";
 
@@ -94,9 +97,11 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 					  $fontStruct = $1; # correspond à height="...", soit la taille d'écriture
 					  #print "$fileName : $fontStruct\n";
 				  }elsif($matchIntro and !$matchTitle and $line =~m /$fontStruct/){
-					  # On cherche ici la prochaine ligne ayant la même taille d'écriture que Introduction
-					  # Ce qui suit est expérimental et pas forcément au point...
+					  # Nous avons ici la prochaine ligne ayant la même taille d'écriture que Introduction
 					  
+					  print $secondTitles "$fileName : $line";
+					  
+					  # A partir de là, nous cherchons la meilleur chaîne de caractères extraite du document xml à retrouver dans son équivalent txt
 					  my $wholeLine = "";
 					  
 					  $matchTitle++;
@@ -111,7 +116,7 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 						  $line = <$file>;
 					  }while(length($wholeLine) < 4); #Sélectionne la prochaine "phrase" après le second titre, l'objectif étant d'avoir quelque chose de suffisamment unique à matcher dans le fichier .txt
 					  
-					  print "$fileName : $wholeLine\n";
+					  print $firstLongLine "$fileName : $wholeLine\n";
 				  }
 			  }
 			  if($matchIntro){
@@ -136,5 +141,6 @@ print "Nombre de réferences : $nbRef.\n";
 
 close($noMatchIntro);
 close($noMatchRef);
-close($matchSpec);
+close($secondTitles);
+close($firstLongLine);
 closedir(DIR);
