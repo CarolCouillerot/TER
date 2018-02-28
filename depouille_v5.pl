@@ -340,7 +340,7 @@ sub parcours {
 # lecture des donnees
 # sépare titre, auteurs, référence et enlève fausses langues et écrit les bonnes langues
 # das resultat_lecture.csv
-# a faire : virer les pays
+# TODO : virer les pays
 sub lecture {
   my $donnees = $_[0];
   my $line;

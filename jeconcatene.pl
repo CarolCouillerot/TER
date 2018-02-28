@@ -37,7 +37,7 @@ open($filesList, ">textes_adresses.txt") or die "Could not create textes_adresse
 opendir(DIR, $dirName) or die "Could not open !! $dir\n";
 
 while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
-	if ($subDirName =~m /P00/){
+	if ($subDirName =~m /P[0-9][0-9]/){
 		opendir($subDir, "$dirName$subDirName") or die "Could not open ! $subDir\n";
 		
 		while (my $fileName = readdir($subDir)) {
