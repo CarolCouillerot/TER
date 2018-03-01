@@ -443,8 +443,8 @@ sub lecture {
 		$fic = $line;
 		print TRACE ("\n\n-------------------------------------\n$fic");
 		print RES ("\n$fic");
-		my $tmp = scalar( ($nb_textes/$nb_files)*100);
-		print STDOUT "\rProgression : $tmp%";
+		my $tmp = scalar( ($nb_textes/$nb_files)*100); # nombre de fichiers traités / nombre total de fichier * 100, permet d'afficher une progression
+		print STDOUT "\rProgression : $tmp%"; # l'option \r permet à la progression de rester sur la même ligne du terminal. Pour cela, aucun autre print STDOUT doit être fait dans la boucle.
 
 		#............................................................traitement d'un texte
 		open(TEXT, "<$fic ")|| die "Je ne peux ouvrir le fichier $fic $!";
@@ -487,7 +487,7 @@ sub lecture {
 		while ($i < $nb_langues) {
 			#print TRACE ("\ncherche $i $tab_langues[$i] \n dans : '$texte'");
 			$langue = $tab_langues[$i];
-			if ($texte =~m / $langue/i) {
+			if ($texte =~m / $langue[ ,;:?!~.!)-\/]+/i) {
 				print TRACE ("\n	=> $langue");
 				$marque = $i;
 				#print RES ("\n	=> $langue");
