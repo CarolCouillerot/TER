@@ -6,15 +6,13 @@
 #	ou leur nom de fichier lorsqu'il y a le suffixe "Name".
 
 # variables de navigation dans les dossiers et sous-dossiers
-my $dirName = './pdfs/ACL/';
+my $dirName = './pdfs/LREC/';
 my $dir;
 my $subDirName;
 my $subDir;
 
 # Fichiers lus
 my $fileName;
-my $txtFileName;
-my $txtFile;
 my $xmlFileName;
 my $xmlFile;
 # Fichier écrit
@@ -36,21 +34,19 @@ my $fontLine;
 opendir(DIR, $dirName) or die "Could not open !! $dir\n";
 
 while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
-	if ($subDirName =~m /P[0-9][0-9]/){
+	if ($subDirName =~m /.[0-9][0-9]/){
 		opendir($subDir, "$dirName$subDirName") or die "Could not open ! $subDir\n";
 		
 		while (my $fileName = readdir($subDir)) {
-			if ($fileName =~m /(^.*).xml$/) { # Si un fichier .xml existe, alors son équivalent .txt existe aussi forcément
+			if ($fileName =~m /(^.*).xml$/) {
 				my $goodLine;
 				my $lineSave;
 				my $content = "";
 				
 				$xmlFileName = $fileName;
-				$txtFileName = $1.".txt";
 				$createdFileName = "$1_traite.txt";
 				
 				open($xmlFile, "<$dirName$subDirName/$xmlFileName") or die "Could not open : $xmlFileName\n";
-				open($txtFile, "<$dirName$subDirName/$txtFileName") or die "Could not open : $txtFileName\n";
 				
 				$nbTreatedFiles++;
 				
@@ -58,31 +54,21 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 				$matchTitle = 0;
 				$matchRef = 0;
 				while (my $line = <$xmlFile>) {
-					# 1- On cherche la ligne Introduction et on enregistre sa taille d'écriture
-					# 2- On cherche la prochaine ligne possédant cette taille d'écriture
-					# 3- On enregistre la première ligne d'une longueur suffisante après la ligne trouvée en 2-
-					# 4- (en dehors de ce while) On cherche la première ligne du fichier txt matchant avec la ligne trouvée en 3-
-					# Explication rapide : les lignes du fichier xml (débarassées de leurs balises) sont nêtement plus petites et fractionnées que celles du fichier txt, et parfois pas dans le même ordre (je pense aux titres et à leurs numéros, par exemple)
-					if(!$matchIntro and $line =~m /(font="[0-9]+").*>?([0-9]|[0-9] |[0-9]. )?(Introduction|INTRODUCTION)\.?<\//){
-						# 1- Introduction trouvée
+					# 1- On cherche la ligne Introduction et on enregistre son format d'écriture
+					# 2- On cherche la prochaine ligne possédant ce format d'écriture
+					# 3- Une fois le second titre trouvé, on nettoie toutes les lignes suivantes de leur balisage et on les concatène dans le nouveau fichier
+					if(!$matchIntro and $line =~m /(font="[0-9]+").*>?([0-9]|[0-9] *|[0-9]. *)?(Introduction|INTRODUCTION)\.? *<\//){
+						# 1- Introduction trouvée, démarrage du #2
 						++$matchIntro;
 						++$nbMatchIntro;
 						$fontStruct = $1;
 						$fontLine = $line;
 					}elsif($matchIntro and !$matchTitle and $line =~m /$fontStruct/){
-						# 2- Prochaine ligne de même taille de police trouvée
+						# 2- Prochaine ligne de même format trouvée, démarrage du #3
 						++$matchTitle;
 					}
 					if($matchTitle and !$matchRef) {		
-						# do{
-						 #	while($line =~m />(.+)</){ # On se débarasse (maladroitement) des balises
-							#	 $line = $1;
-						 #	}
-							
-						 #	$goodLine = $line;
-							
-						 #	$line = <$xmlFile>;
-						# }while(length($goodLine) < 4); # 3- On prend la prochaine ligne de taille suffisante
+						# 3- On enlève pour chaque ligne leur balisage, on concatène et on s'arrête une fois la Bibliographie trouvée
 						while($line =~m /(^.*?)<(.+?)>(.*$)/){
 							$line = $1.$3;
 						}
@@ -92,48 +78,14 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 							$content .= "$line\n";
 						} 
 					}
-					# print("$matchTitle\t");
 				}
-				open($createdFile, ">$dirName$subDirName/$createdFileName") or die "Could not open : $createdFileName\n";
-				print $createdFile  "$content";
-				# Passage de la lecture du .xml à la lecture du .txt (si tous les éléments voulus ont été trouvés)
+				if($matchTitle){
+					open($createdFile, ">$dirName$subDirName/$createdFileName") or die "Could not open : $createdFileName\n";
+					print $createdFile  "$content";
+					close($createdFile);
+				}
 				
-				# if($matchIntro and $matchTitle){
-				# 	open($createdFile, ">$dirName$subDirName/$createdFileName") or die "Could not open : $createdFileName\n";
-				# 	print "Created $createdFileName\n";
-					
-				# 	$matchLine = 0;
-					
-				# 	while (my $line = <$txtFile>){
-						
-				# 		if(!$matchLine and $line =~m /\Q$goodLine\E/i){
-				# 			++$matchLine;
-				# 		}
-						
-				# 		# 4- Une fois goodLine trouvée, on récupère tout le .txt restant
-						
-				# 		if($matchLine){
-				# 			print $createdFile $line;
-				# 		}
-				# 	}
-					
-				# 	if(!$matchLine){
-				# 		print "Did not match ; good line : $goodLine\n";
-				# 	}
-					
-				# 	close($createdFile);
-				# }elsif($matchIntro and !$matchTitle){
-				# 	print "Lost title : $xmlFileName ; $fontLine";
-				# }elsif(!$matchIntro and !$matchTitle){
-				# 	print "No Intro : $xmlFileName\n";
-				# }elsif(!$matchIntro and $matchTitle){
-				# 	print "What the fuck ? $xmlFileName\n";
-				# }
-				
-				
-				close($createdFile);
 				close($xmlFile);
-				# close($txtFile);
 			}
 			
 		}

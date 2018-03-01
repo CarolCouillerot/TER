@@ -6,7 +6,7 @@
 #  ou leur nom de fichier lorsqu'il y a le suffixe "Name".
 
 # variables de navigation dans les dossiers et sous-dossiers
-my $dirName = './pdfs/ACL/';
+my $dirName = './pdfs/LREC/';
 my $dir;
 my $subDirName;
 my $subDir;
@@ -43,8 +43,8 @@ open ($firstLongLine, ">firstLongLine.txt");
 opendir(DIR, $dirName) or die "Could not open !! $dir\n";
 
 while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
-  #if ($subDirName =~m /P[0|1][0-9]/){
-	  opendir($subDir, "$dirName$subDirName") or die "Could not open ! $subDir\n";
+  #if ($subDirName =~m /.[0|1][0-9]/){
+	  opendir($subDir, "$dirName$subDirName") or die "Could not open ! $subDirName\n";
 	  
 	  while (my $fileName = readdir($subDir)) { #pour chaque fichier
 		  if ($fileName =~m /(.*).txt$/) { # Fichier .txt
@@ -72,12 +72,12 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 			  if($matchIntro){
 				  $nbIntro++;
 			  }else{
-				  print $noMatchIntro "$fileName\n"; #écriture dans $noMatchIntro
+				  print $noMatchIntro "$dirName$subDirName/$fileName\n"; #écriture dans $noMatchIntro
 			  }
 			  if($matchRef){
 				  $nbRef++;
 			  }else{
-				  print $noMatchRef "$fileName\n"; #écriture dans $noMatchRef
+				  print $noMatchRef "$dirName$subDirName/$fileName\n"; #écriture dans $noMatchRef
 			  }
 			  
 			  close($file);
@@ -92,7 +92,7 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 			  $matchTitle = 0;
 			  while (my $line = <$file>) {
 				  
-				  if(!$matchIntro and $line =~m /(height="[0-9]+").*>?([0-9]|[0-9] |[0-9]. )?(Introduction|I ?N ?T ?R ?O ?D ?U ?C ?T ?I ?O ?N)\.?<\//){
+				  if(!$matchIntro and $line =~m /(font="[0-9]+").*>?([0-9]|[0-9] *|[0-9]. *)?(Introduction|I ?N ?T ?R ?O ?D ?U ?C ?T ?I ?O ?N)\.? *<\//){
 					  ++$matchIntro;
 					  $fontStruct = $1; # correspond à height="...", soit la taille d'écriture
 					  #print "$fileName : $fontStruct\n";
@@ -107,8 +107,8 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 					  $matchTitle++;
 					  
 					  do{ #permet de se débarasser des balises <...> (clairement pas la meilleure méthode)
-						  while($line =~m />(.+)</){
-							  $line = $1;
+						  while($line =~m />(^.*?)<(.+?)>(.*$)</){
+							  $line = $1.$3;
 						  }
 						  
 						  $wholeLine = $line;
@@ -122,7 +122,7 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 			  if($matchIntro){
 				  $nbIntroXml++;
 			  }else{
-				  print $noMatchIntro "Xml : $fileName\n"; # écriture dans $noMatchIntro
+				  print $noMatchIntro "$dirName$subDirName/$fileName\n"; # écriture dans $noMatchIntro
 			  }
 			  
 			  close($file);
@@ -144,3 +144,5 @@ close($noMatchRef);
 close($secondTitles);
 close($firstLongLine);
 closedir(DIR);
+
+`sort noMatchIntro.txt -o noMatchIntro.txt`;
