@@ -22,15 +22,11 @@
 @tab_pays = ();
 @tab_paires = ();
 my %res_langues;
-#lance("test.txt", "resultats_test.csv", "erreurs_test.txt");
-#lance("textes_ACL.txt", "resultats_ACL.csv", "erreurs_ACL.txt", "corpus_ACL.txt");
-#lance("textes_LREC.txt", "resultats_LREC.csv", "erreurs_LREC.txt", "corpus_LREC.txt");
+
 #concordance("corpus_ACL.txt");
-#repertorie_langues("corpus_lecture", "langues3.csv", "resultats_tout_v4.csv", "erreurs_tout.txt");
-#repertorie_langues("corpus_test.txt", "resultats_test.csv", "erreurs_test.txt");
 #traitement_paires("res_paires_complement.txt", "res_paires_complement2.txt");
-#pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
-etude_comparative("textes_adresses.txt", "erreurs_lecture.txt");
+pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
+#etude_comparative("textes_adresses.txt", "erreurs_lecture.txt");
 
 #----------------------------------------
 # IN : fichier TRACE nettoyé
@@ -109,6 +105,7 @@ sub concordance {
   close(OUT);
 }
 
+
 #--------------------------------------------------------
 sub pretraitements {
   my $liste_fichiers = $_[0];
@@ -135,221 +132,6 @@ sub etude_comparative {
   lecture_comparative($liste_fichiers);
   close(TRACE);
   close(ERR);
-}
-
-#----------------------------------------
-# recherche des langues et couples de langues
-sub repertorie_langues {
-  my $fic_corpus = $_[0];
-  my $fic_langues = $_[1];
-  my $fic_res = $_[2];
-  my $fic_err = $_[3];
-  open(TRACE, ">trace.txt ");
-  open(RES, ">$fic_res ");
-  open(ERR, ">$fic_err ");
-  parcours($fic_corpus, $fic_langues);
-  close(TRACE);
-  close(RES);
-  close(ERR);
-}
-#-------------------------------------------
-#recherche des langues
-#variables globales utilisées :
-# - nb_fausses_langues, incrémenté dans parcours
-# - nb_langues, incrémenté dans parcours
-sub traite_texte {
-	my $texte = $_[0];
-	my $i;
-	my $j;
-	my $langue;
-	my $langue2;
-	my $pays;
-	my $couples;
-	my $fic;
-	my $test_langue = 'false';
-	my $len_langue;
-	my $debut_texte = 'false';
-
-	#................ destruction d'expressions generatrices de bruit (fausses langues)
-	$i = 0;
-	$marque = "";
-	#print TRACE ("\n   APRES traite_texte($texte)");
-	while ($i < $nb_fausses_langues) {
-		#print TRACE ("\n*** cherche $i '$tab_fausses_langues[$i]' \n dans : '$texte'");
-		$langue = $tab_fausses_langues[$i];
-		while ($texte =~m /(.*) $langue([ ,;?!].*)/i) {
-			$texte = $1." ".$2;
-			print TRACE ("\n  <= $langue");
-			#print RES ("\n  <= $langue");
-		}
-		$i++;
-	}
-	#............................................................recherche des langues
-	$i = 0;
-	while ($i < $nb_langues) {
-		$test_langue = 'false';
-		$langue = $tab_langues[$i];
-		$len_langue = length($langue);
-		if ($len_langue le 4) {
-			if ($texte =~m / $langue[ ,;:?!~.!)-]/) {
-				$test_langue = 'true';
-			}
-		}
-		else {
-			if ($texte =~m / $langue[ ,;:?!~.!)<>\/-]/i) {
-				$test_langue = 'true';
-			}
-		}
-
-		if ($test_langue eq 'true') {
-			$res_langues[$langue]++;
-			print TRACE ("\n  => $i $langue");
-			#print TRACE ("\n  $texte");
-			$marque = $i;
-			#print RES ("\n  => $langue");
-			$j = 0;
-			while ($j < $nb_langues) {
-				$langue2 = $tab_langues[$j];
-				#print TRACE ("\n    cherche couple $i $j $tab_langues[$i] $tab_langues[$j]");  close TRACE; open(TRACE, ">>trace.txt ");
-				if (($texte =~m / $langue2 *[!?-] *$langue[ ,;:?!~.!)-]/i) or ($texte =~m / $langue *[!?-] *$langue2[ ,;:?!~.!)-]/i)) {
-					print TRACE ("\n  ==> $langue $langue2");
-					#print RES ("\n  => $langue");
-					$couples = $couples. ", ($langue $langue2), ($langue2 $langue)";
-				}
-				$j++;
-			}
-		}
-		elsif ($texte =~m / $langue/i) {
-			print TRACE ("\n  Langue non reconnue : $i $langue");
-		}
-
-		if ($marque ne "") {
-			print RES (";1");
-			$marque = "";
-			}
-		else {
-			print RES (";");
-			}
-		$i++;
-	}
-}
-
-#----------------------------------------
-# traiter auteurs (avant Abstract) pour pays ;
-# debut : Abstract ;
-# erreurs (voir source) :
-# - pas de "@"
-# - "@" après "abstract"
-# lecture des donnees
-sub parcours {
-  my $donnees = $_[0];
-  my $fic_langues = $_[1];
-  my $line;
-  my $i;
-  my $j;
-  my $langue;
-  my $langue2;
-  my $pays;
-  my $texte;
-  my $couples;
-  my $fic;
-  my $test_langue = 'false';
-  my $len_langue;
-  my $debut_texte = 'false';
-  my $nb_files = `wc -l $donnees`;
-  my $counter;
-
-  #............................................................liste de langues
-  open(IN, "<langues3.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
-  print TRACE ("\n$fic_langues");
-  while (($line = <IN>) and (!($line =~m/FAMILLES/))) {
-    chop($line);
-    print TRACE ("\n$line");
-	if ($line =~m /^([^ ]+) +([^()]*)( \(.*)?$/) {
-		$langue = $2;
-		$tab_langues[$nb_langues] = $langue;
-		print TRACE ("\n  $nb_langues $langue");
-		$nb_langues++;
-		$res_langues[$langue] = 0;
-	}
-  }
-  print STDOUT ("\nnb_langues = $nb_langues");
-  close(IN);
-  #............................................................liste de fausses langues
-  open(IN, "<fausses_langues.txt ")|| die "Je ne peux ouvrir le fichier $fic $!";
-  while ($line = <IN>) {
-    chop($line);
-	$langue = $line;
-	$tab_fausses_langues[$nb_fausses_langues] = $langue;
-	$nb_fausses_langues++;
-	}
-  close(IN);
-  #............................................................liste de pays
-  open(IN, "<pays.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
-  while ($line = <IN>) {
-    chop($line);
-	$pays = $line;
-	$tab_pays[$nb_pays] = $pays;
-	$nb_pays++;
-	}
-  close(IN);
-
-  $i = 0;
-  while ($i < $nb_langues) {
-    print TRACE ("\n $i $tab_langues[$i]");
-	print RES (";$tab_langues[$i]");
-	$i++;
-  }
-  #$i = 0;
-  #while ($i < $nb_pays) {
-    #print TRACE ("\n $i $tab_pays[$i]");
-	#print RES (";$tab_pays[$i]");
-	#$i++;
-  # }
-
-  open(IN, "<$donnees ")|| die "Je ne peux ouvrir le fichier $fic $!";
- #  while ($line = <IN> and $debut_texte eq 'false') {
-	# chop($line);
-	# if ($line =~m /^  (.*)$/) {
-	# 	$fic = $1;
-	# 	$debut_texte = 'true';
-	# 	print TRACE ("\n\n----------------------------- $fic"); close TRACE; open(TRACE, ">>trace.txt ");
-	# 	print RES ("\n$fic;");
-	# 	$texte = "";
-	# }
- #  }
-
-  while ($line = <IN>) {
- 
-	#print TRACE ("\n\n** $line");
-	#................ identification texte
-	# les textes sont sur une seule ligne, séparés par une ligne vide, le chemin, une nouvelle ligne vide
-	if ($line !~m /^\n|\.\/pdfs\/.*\/.*traite.txt\n$/) {
-		$texte = $line;
-		traite_texte($texte);
-		$fic = $1;
-		print TRACE ("\n\n----------------------------- $fic"); close TRACE; open(TRACE, ">>trace.txt ");
-	    $nb_textes++;
-		$couples = "";
-		$texte = "";
-		print RES ("\n$fic;");
-		$| = 1;
-		my $tmp = scalar( ($nb_textes/$nb_files)*100);
-		print STDOUT "\rProgression : $tmp%";
-	}
-  }
-  print RES ("$couples");
-  print STDOUT ("\n$nb_textes textes traites");
-  print TRACE ("\n$nb_textes textes traites");
-
-  open($counter, ">counter.txt") or die "impossible d'ouvrire le fichier counter.txt\n";
-
-  foreach my $k (keys(%res_langues)) {
-  	print $counter "$k : $res_langues{$k}\n";
-  }
-
-  close($counter);
-
 }
 
 
@@ -494,7 +276,21 @@ sub lecture {
 			}
 			$i++;
 		}
-	
+		
+		#...................................................................
+		# Recherche de contexte concernant les corpus parallèles
+		
+		# Multilingual corpora
+		# aligned parallel corpora
+		# comparable corpus
+		# corpus/corpora => corp\w+ (peu de mot commence par corp, surtout précédé des mots ci-dessus)
+		
+		while ($texte =~ /(Multilingual corp\w*)|(aligned parallel)|(aligned corp\w*)|(parallel corp\w*)|(comparable corp\w*)/gi) {
+			print TRACE ("\n\t:::: $1$2$3$4$5");
+		}
+		
+		#...................................................................
+		# Comptage des langues par texte
 		$i = 0;
 		while ($i < $nb_langues) {
 			#print TRACE ("\ncherche $i $tab_langues[$i] \n dans : '$texte'");
@@ -557,15 +353,18 @@ sub lecture {
 }
 
 #----------------------------------------
-# traiter auteurs (avant Abstract) pour pays ;
-# debut : Abstract ;
-# erreurs (voir source) :
-# - pas de "@"
-# - "@" après "abstract"
-# lecture des donnees
-# sépare titre, auteurs, référence et enlève fausses langues et écrit les bonnes langues
-# das resultat_lecture.csv
-# TODO : virer les pays
+# Détecte les occurences de langues dans deux corpus distincts (provenant des mêmes sources),
+#  et note les différences de résultat dans le fichier trace_comparatif.txt
+# Les deux corpus :
+#  - Corpus issu de la conversion des documents pdf en format txt via l'outil pdftotxt
+#  - Corpus issu de la conversion en xml (via pdftohtml -xml) puis du prétraitement par elagage.pl et jeconcatene.pl (nom à changer)
+# Données en entrée :
+#  - Liste des adresses des fichiers composants le second corpus cité ci-dessus.
+#   Les noms des fichiers doivent se terminer par "_traite.txt", correspondant au noms donnés par le script de prétraitement elagage.pl.
+#   Les fichiers de l'autre corpus ont le même nom, mais sans le suffixe "_traite".
+# Données en sortie :
+#  - Le fichier trace_comparatif donnant pour chaque document source la langue ne se trouvant que dans l'un ou l'autre du fichier correspondant.
+#   Il est précisé dans lequel la langue est présente.
 sub lecture_comparative {
 	my $donnees = $_[0];
 	my $line;
