@@ -1,12 +1,19 @@
 #############################
 # Crée des copies des documents txt débarassés de leurs Introductions (et prochainement peut être de leurs bibliographies)
+# Crée également un fichier textes_adresses.txt contenant les adresses de tous les fichiers traités.
+# 
+# Doit être lancé via perl, sans aucun paramètre.
+##
+# Le script va chercher le dossier indiqué par $dirName, que vous pouvez modifier. Il s'agit normalement
+#  du dossier contenant tous les articles d'un groupe de conférences, comme ACL ou LREC.
+# Ce dossier doit être organisé en sous-dossier, dans lesquels ce script ira chercher les documents .xml à traiter.
 ##
 # Vous trouverez plusieurs variables ayant le même nom, au suffixe "Name" près.
 # Ces variables sont les variables de dossiers et fichiers à lire ou écrire,
 #	ou leur nom de fichier lorsqu'il y a le suffixe "Name".
 
 # variables de navigation dans les dossiers et sous-dossiers
-my $dirName = './pdfs/LREC/';
+my $dirName = './pdfs/ACL/';
 my $dir;
 my $subDirName;
 my $subDir;
@@ -18,6 +25,9 @@ my $xmlFile;
 # Fichier écrit
 my $createdFileName;
 my $createdFile;
+my $createdEntireFile;
+my $createdEntireFileName;
+my $filesList;
 
 # Variables booléennes
 my $matchIntro;
@@ -31,6 +41,7 @@ my $nbMatchIntro = 0;
 my $fontStruct;
 my $fontLine;
 
+open($filesList, ">textes_adresses.txt") or die "Could not create textes_adresses";
 opendir(DIR, $dirName) or die "Could not open !! $dir\n";
 
 while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
@@ -45,7 +56,9 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 				
 				$xmlFileName = $fileName;
 				$createdFileName = "$1_traite.txt";
+				$createdEntireFileName = "$1_entier.txt";
 				
+				open($createdEntireFile, ">$dirName$subDirName/$createdEntireFileName") or die "Could not open : $createdEntireFileName\n";
 				open($xmlFile, "<$dirName$subDirName/$xmlFileName") or die "Could not open : $xmlFileName\n";
 				
 				$nbTreatedFiles++;
@@ -75,17 +88,27 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 						if ($line =~m /^([0-9]+(\.)*[  \t]+R[eé]f[eé]rences?|R[eé]f[eé]rences?|[0-9]+\.[  \t]+Bibliography|Bibliography|[0-9]+(\.)*[  \t]+Bibliographical References|Bibliographical References|5HIHUHQFHV)/i) {
 							$matchRef++;
 						}else{
-							$content .= "$line\n";
+							if($line =~m /(.*)-$/) { $content .= "$1"; } # Suppression des césures
+							else { $content .= "$line "; }
 						} 
 					}
+					
+					# Creation du fichier entier
+					while($line =~m /(^.*?)<(.+?)>(.*$)/){
+						$line = $1.$3;
+					}
+					if($line =~m /(.*)-$/) { print $createdEntireFile $line; } # Suppression des césures
+					else { print $createdEntireFile $line." "; }
 				}
-				if($matchTitle){
+				if($matchTitle and $matchRef){
 					open($createdFile, ">$dirName$subDirName/$createdFileName") or die "Could not open : $createdFileName\n";
 					print $createdFile  "$content";
 					close($createdFile);
+					print $filesList $dirName.$subDirName."/".$createdFileName."\n";
 				}
 				
 				close($xmlFile);
+				close($createdEntireFile);
 			}
 			
 		}
@@ -97,4 +120,7 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 print "Nombre de fichiers traités : $nbTreatedFiles.\n";
 print "Nombre d'Intro trouvés : $nbMatchIntro.\n";
 
+close($filesList);
 closedir(DIR);
+
+`sort textes_adresses.txt -o textes_adresses.txt`;
