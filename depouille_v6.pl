@@ -171,7 +171,7 @@ sub lecture {
 	my $titre_trouve = 'false';
 	my $pays_trouve;
 	my $abstract_trouve;
-	my $titre;
+	my $titre="";
 	my $auteurs;
 	my $ref;
 	
@@ -449,7 +449,7 @@ sub lecture_comparative {
 		my $fic2;
 		
 		if($fic =~m /^(.+)_traite(.+)$/){
-			$fic2 = $1.$2;
+			$fic2 = $1."_entier".$2;
 		}
 		
 		print TRACE ("\n\n-------------------------------------\n$fic");
