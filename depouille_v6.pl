@@ -6,21 +6,7 @@
 use warnings;
 use POSIX;
 
-# Ces variables globales sont utilisées dans parcours et traite_texte,
-#  elles sont aussi redéclarées dans lecture
-  my $nb_langues = 0;
-  my $nb_fausses_langues = 0;
-  my $nb_pays = 0;
-  my $nb_textes = 0;
-
-
-
-# @tab_ancien_ve = ();
-# @tab_ve = ();
-# %tab_mediane = ();
-#@tab_dpt = ();
-#@tab_debut = ();
-#@tab_fin = ();
+# Variables globales, jamais déclarées nulle-part ailleurs
 @tab_langues = ();
 @tab_fausses_langues = ();
 @tab_pays = ();
@@ -28,39 +14,10 @@ use POSIX;
 my %res_langues;
 
 #concordance("corpus_ACL.txt");
-#traitement_paires("res_paires_complement.txt", "res_paires_complement2.txt");
-# pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
+#pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
 #etude_comparative("textes_adresses.txt", "erreurs_lecture.txt");
 analyse_diachronique("textes_adresses.txt", 5, "counter_diachronique.csv");
 
-#----------------------------------------
-# IN : fichier TRACE nettoyé
-# Role : rassembler les "  ==> English Vietnamese" derrière les noms de fichiers
-sub traitement_paires {
-  my $fic_in = $_[0];
-  my $fic_res = $_[1];
-  my $line;
-  my $fic;
-  my $texte = "";
-  my $paire = "";
-  my $paire_trouvee = 'false';
-  open(RES, ">$fic_res ");
-  print STDOUT ("ouverture $fic_res ");
-  open(IN, "<$fic_in ")|| die "Je ne peux ouvrir le fichier $fic $!";
-  while ($line = <IN>) {
-    chop($line);
-	if ($line =~m /^----------------------------- (.+)$/) {
-		$nb_textes++;
-		$fic = $1;
-	}
-	elsif ($line =~m /^  ==> (.+)$/) {
-		print RES ("\n$fic;($paire)");
-		$paire = $1;
-		}
-	}
-	close(IN);
-	close(RES);
-}
 
 #----------------------------------------
 sub concordance {
@@ -147,31 +104,31 @@ sub etude_comparative {
 # - pas de "@"
 # - "@" après "abstract"
 # lecture des donnees
-# sépare titre, auteurs, référence et enlève fausses langues et écrit les bonnes langues
-# das resultat_lecture.csv
+# enlève fausses langues
+# écrit les occurences de langues ainsi que de mots en rapport avec les corpus parallèles
+#  dans resultat_lecture.csv
 # TODO : virer les pays
 sub lecture {
+	#
 	my $donnees = $_[0];
+	
 	my $line;
 	my $fic;
+	
 	my $i;
+	
+	my $texte;
+	
 	my $langue;
 	my $pays;
+	
 	my $nb_langues = 0;
 	my $nb_fausses_langues = 0;
 	my $nb_pays = 0;
 	my $nb_textes = 0;
 	my $nb_files = `wc -l $donnees`;
-	my $texte;
-	my $car;
-	my $n1;
-	my $n2;
-	my $n3;
-	my $n4;
-	my $titre_trouve = 'false';
-	my $pays_trouve;
-	my $abstract_trouve;
-	my $titre="";
+	
+	my $titre;
 	my $auteurs;
 	my $ref;
 	
@@ -248,9 +205,7 @@ sub lecture {
 		#............................................................traitement d'un texte
 		open(TEXT, "<$fic ")|| die "Je ne peux ouvrir le fichier $fic $!";
 		$texte = "";
-		$titre = "";
 		$ref = "";
-		$titre_trouve = 'false';
 		$ref_trouvees = 'false';
 		$nb_textes++;
 
@@ -264,7 +219,8 @@ sub lecture {
 		#print TRACE ("\n\n TEXTE : $texte");
 		#............................................................recherche des langues
 		#................ destruction d'expressions generatrices de bruit (fausses langues)
-		$texte = $titre . "\n" . $texte; # TO-DO: récupérer le titre
+		#$texte = $titre . "\n" . $texte; # TO-DO: récupérer le titre
+		$texte = "\n" . $texte; # TO-DO: récupérer le titre
 		print CORPUS ("\n\n$fic");
 		print CORPUS ("\n$texte");
 	
@@ -372,25 +328,24 @@ sub lecture {
 #   Il est précisé dans lequel la langue est présente.
 sub lecture_comparative {
 	my $donnees = $_[0];
+	
 	my $line;
 	my $fic;
+	
 	my $i;
+	
 	my $langue;
 	my $pays;
+	
 	my $nb_langues = 0;
 	my $nb_fausses_langues = 0;
 	my $nb_pays = 0;
 	my $nb_textes = 0;
+	
 	my $nb_files = `wc -l $donnees`;
+	
 	my $texte;
-	my $car;
-	my $n1;
-	my $n2;
-	my $n3;
-	my $n4;
-	my $titre_trouve = 'false';
-	my $pays_trouve;
-	my $abstract_trouve;
+	
 	my $titre;
 	my $auteurs;
 	my $ref;
