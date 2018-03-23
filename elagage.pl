@@ -97,7 +97,8 @@ while (my $subDirName = readdir(DIR)) { #pour chaque sous-dossier
 					while($line =~m /(^.*?)<(.+?)>(.*$)/){
 						$line = $1.$3;
 					}
-					print $createdEntireFile $line." ";
+					if($line =~m /(.*)-$/) { print $createdEntireFile $line; } # Suppression des césures
+					else { print $createdEntireFile $line." "; }
 				}
 				if($matchTitle and $matchRef){
 					open($createdFile, ">$dirName$subDirName/$createdFileName") or die "Could not open : $createdFileName\n";
