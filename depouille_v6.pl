@@ -29,7 +29,7 @@ my %res_langues;
 
 #concordance("corpus_ACL.txt");
 #traitement_paires("res_paires_complement.txt", "res_paires_complement2.txt");
-# pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
+pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
 #etude_comparative("textes_adresses.txt", "erreurs_lecture.txt");
 analyse_diachronique("textes_adresses.txt", 5, "counter_diachronique.csv");
 
@@ -161,7 +161,7 @@ sub lecture {
 	my $nb_fausses_langues = 0;
 	my $nb_pays = 0;
 	my $nb_textes = 0;
-	my $nb_files = `wc -l $donnees`;
+	my $nb_files = `wc -l $donnees | grep -o "[0-9]*"`;
 	my $texte;
 	my $car;
 	my $n1;
@@ -196,7 +196,7 @@ sub lecture {
 			$nb_langues++;
 			
 			#initialisation du tableau de hashage de comptage des langues
-			$res_langues[$langue] = 0;
+			$res_langues{$langue} = 0;
 		}
 	}
 	close(IN);
@@ -310,7 +310,7 @@ sub lecture {
 				$marque = "";
 				
 				# Incrémentation du score de la langue dans le tableau de hashage
-				$res_langues[$langue]++;
+				$res_langues{$langue}++;
 				$langScore[$i]++; # autre essaie de liste de comptage
 			}
 			else {
