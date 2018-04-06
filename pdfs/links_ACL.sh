@@ -20,6 +20,15 @@ while read line; do
     done < ends
 done < result #la boucle s'exécute pour chaque ligne de ce fichier
 
+curl "https://aclweb.org/anthology/P/P14/" > fic #télécharge la page contenant les pdf
+grep -e "P.\{7\}.pdf" ./fic -o > ends #récupère les suffixes des liens des pdfs
+while read end; do #va créer un fichier de liens dans de nombreux sous-dossiers
+	mkdir -p ./P/P14/
+	cd ./P/P14/
+	echo "https://aclweb.org/anthology/./P14/"$end >> links #envoie les liens dans links
+	cd "../.."
+done < ends
+
 #supprime les fichiers inutiles
 rm fic
 rm ends
