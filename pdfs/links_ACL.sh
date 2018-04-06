@@ -25,7 +25,7 @@ grep -e "P.\{7\}.pdf" ./fic -o > ends #récupère les suffixes des liens des pdf
 while read end; do #va créer un fichier de liens dans de nombreux sous-dossiers
 	mkdir -p ./P/P14/
 	cd ./P/P14/
-	echo "https://aclweb.org/anthology/./P14/"$end >> links #envoie les liens dans links
+	echo "https://aclweb.org/anthology/P/P14/"$end >> links #envoie les liens dans links
 	cd "../.."
 done < ends
 
