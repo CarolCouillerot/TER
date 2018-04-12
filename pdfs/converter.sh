@@ -1,6 +1,10 @@
-# Comvertit tous les pdfs de tous les dossiers en txt.
-# Modifiable pour le rendre moins bourrin...
-
+############################
+# Convertit les fichiers pdf en fichiers xml et txt
+#  TODO: donner le choix de la conversion via un paramètre...
+##
+# Se lance depuis le dossier racine d'une conférence (/ACL, /LREC...),
+#  quelque soit le répertoire où se trouve ce script (utilise un chemin relatif)
+#
 
 for d in ./*/;
 do
