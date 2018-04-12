@@ -11,7 +11,7 @@ do
 	cd $d
 	for f in ./*pdf
 	do
-		echo $f
+		echo $d$f
 		pdftotext $f
 		pdftohtml -xml -i -s $f
 	done
