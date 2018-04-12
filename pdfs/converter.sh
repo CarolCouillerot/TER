@@ -2,30 +2,13 @@
 # Modifiable pour le rendre moins bourrin...
 
 
-for D in ./*/;
+for d in ./*/;
 do
-	cd $D
-	for d in ./*/;
+	cd $d
+	for f in ./*pdf
 	do
-		cd $d
-		for f in ./*pdf
-		do
-			echo $D$d$f >> ../../../textes_adresses.txt
-			pdftotext $f
-		done
-		cd ..
+		pdftotext $f
+		pdftohtml -xml -i -s $f
 	done
 	cd ..
 done
-
-
-#for d in ./*/;
-#do
-#	cd $d
-#	for f in ./*pdf
-#	do
-#		echo "F/"$d$f >> ../../../textes_ACL.txt
-#		pdftotext $f
-#	done
-#	cd ..
-#done
