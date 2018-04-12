@@ -18,7 +18,7 @@ my %res_langues;
 
 #pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
 #etude_comparative("textes_adresses.txt", "erreurs_lecture.txt");
-analyse_diachronique("textes_adresses.txt", 5, "counter_diachronique.csv");
+analyse_diachronique("textes_adresses.txt", 5, "counter_diachronique_10_ans.csv");
 
 
 #----------------------------------------
@@ -545,11 +545,14 @@ sub analyse_diachronique {
 	my $numberOfYear = 18;
 	my $numberOfPeriod = ceil($numberOfYear/$periode);
 	my @nbTextesParPeriode;
+	my @totalLang = 0;
 
 	my @langScore; #compte le nombre d'occurence par langue
 
-
-	for $i (1 .. $numberOfPeriod) { $nbTextesParPeriode[$i] = 0; }
+	for $i (1 .. $numberOfPeriod) { 
+		$nbTextesParPeriode[$i] = 0; 
+		$totalLang[$i] = 0;
+	}
 
 	open(TRACE, ">trace_diachronique.txt") || die "Je ne peux ouvrir le fichier trace_diachronique.txt $!";
 	open(RES, ">$fichier_res") || die "Je ne peux ouvrir le fichier $fichier_res $!";
@@ -652,7 +655,7 @@ sub analyse_diachronique {
 			}
 			if ($marque ne "") {
 				$marque = "";
-				
+				$totalLang[$num_periode]++;
 				$langScore[$i][$num_periode]++; 
 				print TRACE ("$tab_langues[$i] : $langScore[$i]\n-------------------------------------");
 			}
@@ -665,7 +668,7 @@ sub analyse_diachronique {
 	for $i ( 0 .. $#langScore ) {		
    		for $j ( 0 .. $#{$langScore[$i]} ) {
    			if ($j > 0) {
-   				$percent = sprintf "%.2f", scalar( $langScore[$i][$j] / $nbTextesParPeriode[$j]);
+   				$percent = sprintf "%.2f", scalar( $langScore[$i][$j] / $totalLang[$j]);
 	   			print RES ("$percent;")
 	   		}
 	   		else {
@@ -674,7 +677,7 @@ sub analyse_diachronique {
     	}
    	print RES ("\n");
 	}
-
+	
 	close(TRACE);
 	close(RES);
 }
