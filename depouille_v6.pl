@@ -431,7 +431,7 @@ sub lecture_comparative {
 	print("nb de fichiers : $nb_files\n");
 
 	#............................................................liste de langues
-	open(IN, "<langues5.csv ")|| die "Je ne peux ouvrir le fichier langues4.csv";
+	open(IN, "<langues5.csv ")|| die "Je ne peux ouvrir le fichier langues5.csv";
 	while ($line = <IN>) {
 		if($line =~m /[a-z]/){ #élimine les lignes vides
 			chomp($line);
