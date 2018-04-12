@@ -73,3 +73,4 @@ close($badFiles);
 closedir(DIR);
 
 `sort badFiles.txt -o badFiles.txt`;
+`while read p; do mv $p $p.back; done <"badFiles.txt"`;
