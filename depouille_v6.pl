@@ -15,10 +15,10 @@ my %res_langues;
 
 #concordance("corpus_ACL.txt");
 #traitement_paires("res_paires_complement.txt", "res_paires_complement2.txt");
-
 #pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
-#etude_comparative("textes_adresses.txt", "erreurs_lecture.txt");
+#etude_comparative("textes_adresses.txt", "textes_adresses_entier.txt", "erreurs_lecture.txt");
 analyse_diachronique("textes_adresses.txt", 5, "counter_diachronique_10_ans.csv");
+#corpus_corpora("textes_adresses_entier.txt", "corpora_occurrences.txt");
 
 
 #----------------------------------------
@@ -89,11 +89,12 @@ sub pretraitements {
 
 #--------------------------------------------------------
 sub etude_comparative {
-  my $liste_fichiers = $_[0];
+  my $liste_1 = $_[0];
+  my $liste_2 = $_[1];
   my $fic_err = $_[2];
   open(TRACE, ">trace_comparatif.txt ");
   open(ERR, ">$fic_err ");
-  lecture_comparative($liste_fichiers);
+  lecture_comparative($liste_1, $liste_2);
   close(TRACE);
   close(ERR);
 }
@@ -325,6 +326,62 @@ sub lecture {
 }
 
 #----------------------------------------
+# Fonction de recherche de contextes sur les mentions de corpus
+sub corpus_corpora {
+	my $donnees = $_[0];
+	my $fic_res = $_[1];
+	open(TRACE, ">$fic_res");
+	
+	my $line;
+	my $fic;
+	
+	my $i;
+	
+	my $texte;
+	
+	my $nb_textes = 0;
+	my $nb_files = `wc -l $donnees | grep -o "[0-9]*"`;
+	
+	print("nb de fichiers : $nb_files\n");
+
+	open(IN, "<$donnees ")|| die "Je ne peux ouvrir le fichier $donnees $!";
+
+	while ($line = <IN>) {
+		chomp($line);
+		$fic = $line;
+		print TRACE ("\n\n-------------------------------------\n$fic");
+		my $tmp = scalar( ($nb_textes/$nb_files)*100); # nombre de fichiers traités / nombre total de fichier * 100, permet d'afficher une progression
+		print STDOUT "\rProgression : $tmp%"; # l'option \r permet à la progression de rester sur la même ligne du terminal. Pour cela, aucun autre print STDOUT doit être fait dans la boucle.
+
+		#............................................................traitement d'un texte
+		open(TEXT, "<$fic ")|| die "Je ne peux ouvrir le fichier $fic $!";
+		$texte = "";
+		$nb_textes++;
+
+		while ($line = <TEXT>) {
+			chomp $line;
+			$texte .= " ".$line;
+		}
+		close(TEXT);
+		
+		$i = 0;
+		
+		#.........................................................
+		# Recherche de contexte concernant les corpus mentionnés
+		
+		# corpus/corpora
+		
+		while ($texte =~ /(.{20} corpus.{20})|(.{20} corpora.{20})/gi) {
+			print TRACE ("\n\t:::: $1$2");
+		}
+	}
+	print STDOUT ("\n$nb_textes textes traités");
+	print TRACE ("\n$nb_textes textes traités");
+	
+	close(TRACE);
+}
+
+#----------------------------------------
 # Détecte les occurences de langues dans deux corpus distincts (provenant des mêmes sources),
 #  et note les différences de résultat dans le fichier trace_comparatif.txt
 # Les deux corpus :
@@ -338,10 +395,16 @@ sub lecture {
 #  - Le fichier trace_comparatif donnant pour chaque document source la langue ne se trouvant que dans l'un ou l'autre du fichier correspondant.
 #   Il est précisé dans lequel la langue est présente.
 sub lecture_comparative {
-	my $donnees = $_[0];
+	my $donnees1 = $_[0];
+	my $donnees2 = $_[1];
 	
+	my $in1;
+	my $in2;
 	my $line;
-	my $fic;
+	my $line1;
+	my $line2;
+	my $fic1;
+	my $fic2;
 	
 	my $i;
 	
@@ -353,7 +416,8 @@ sub lecture_comparative {
 	my $nb_pays = 0;
 	my $nb_textes = 0;
 	
-	my $nb_files = `wc -l $donnees`;
+	my $nb_files = `wc -l $donnees1 | grep -o "[0-9]*"`;
+	# Faire de même avec $donnees2 et envoyer une erreur s'ils n'ont pas le même nombre de fichiers ?
 	
 	my $texte;
 	
@@ -367,7 +431,7 @@ sub lecture_comparative {
 	print("nb de fichiers : $nb_files\n");
 
 	#............................................................liste de langues
-	open(IN, "<langues4.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	open(IN, "<langues4.csv ")|| die "Je ne peux ouvrir le fichier langues4.csv";
 	while ($line = <IN>) {
 		if($line =~m /[a-z]/){ #élimine les lignes vides
 			chomp($line);
@@ -386,7 +450,7 @@ sub lecture_comparative {
 	}
 	close(IN);
 	#............................................................liste de fausses langues
-	open(IN, "<fausses_langues.txt ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	open(IN, "<fausses_langues.txt ")|| die "Je ne peux ouvrir le fichier fausses_langues";
 	while ($line = <IN>) {
 		chop($line);
 		$langue = $line;
@@ -395,7 +459,7 @@ sub lecture_comparative {
 	}
 	close(IN);
 	#............................................................liste de pays
-	open(IN, "<pays.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	open(IN, "<pays.csv ")|| die "Je ne peux ouvrir le fichier pays.csv";
 	while ($line = <IN>) {
 		chomp($line);
 		if($line =~m /([a-zA-Z -]+)/){ # Juste pour se débarasser une bonne fois pour toute du retour à la ligne
@@ -407,18 +471,16 @@ sub lecture_comparative {
 	}
 	close(IN);
 
-	open(IN, "<$donnees ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	open(in1, "<$donnees1 ")|| die "Je ne peux ouvrir le fichier $donnees1";
+	open(in2, "<$donnees2 ")|| die "Je ne peux ouvrir le fichier $donnees2";
 
-	while ($line = <IN>) {
-		chop($line);
-		$fic = $line;
-		my $fic2;
+	while ($line1 = <in1> and $line2 = <in2>) {
+		chop($line1);
+		chop($line2);
+		$fic1 = $line1;
+		$fic2 = $line2;
 		
-		if($fic =~m /^(.+)_traite(.+)$/){
-			$fic2 = $1."_entier".$2;
-		}
-		
-		print TRACE ("\n\n-------------------------------------\n$fic");
+		print TRACE ("\n\n-------------------------------------\n$fic1");
 		my $tmp = scalar( ($nb_textes/$nb_files)*100); # nombre de fichiers traités / nombre total de fichier * 100, permet d'afficher une progression
 		print STDOUT "\rProgression : $tmp%"; # l'option \r permet à la progression de rester sur la même ligne du terminal. Pour cela, aucun autre print STDOUT doit être fait dans la boucle.
 
@@ -428,7 +490,7 @@ sub lecture_comparative {
 		
 		$nb_textes++;
 		
-		open(TEXT, "<$fic ")|| die "Je ne peux ouvrir le fichier $fic $!";
+		open(TEXT, "<$fic1 ")|| die "Je ne peux ouvrir le fichier $fic1 $!";
 		
 		while ($line = <TEXT>) {
 			chomp $line;
@@ -450,7 +512,8 @@ sub lecture_comparative {
 		#print TRACE ("\n\n TEXTE : $texte");
 		#............................................................recherche des langues
 		#................ destruction d'expressions generatrices de bruit (fausses langues)
-		$texte = $titre . "\n" . $texte; # TO-DO: récupérer le titre
+		#$texte = $titre . "\n" . $texte; # TO-DO: récupérer le titre
+		$texte = "\n" . $texte; # TO-DO: récupérer le titre
 		
 		$i = 0;
 		$marque = "";
@@ -511,7 +574,7 @@ sub lecture_comparative {
 	print STDOUT ("\n$nb_textes textes traités");
 	print TRACE ("\n$nb_textes textes traités");
 	
-	open(my $counter, ">counter.csv") or die "impossible d'ouvrire le fichier counter.txt\n";
+	open(my $counter, ">counter_comparatif.csv") or die "impossible d'ouvrire le fichier counter.txt\n";
 
 	for ($i = 0; $i < $nb_langues ; $i++){
 		print $counter "$tab_langues[$i];$langScore[$i];$langScore2[$i]\n";
