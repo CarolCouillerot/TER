@@ -130,7 +130,6 @@ sub lecture {
 	my $nb_pays = 0;
 	my $nb_textes = 0;
 	my $nb_files = `wc -l $donnees | grep -o "[0-9]*"`;
-	my $texte;
 	my $car;
 	my $n1;
 	my $n2;
@@ -610,6 +609,7 @@ sub analyse_diachronique {
 	my @nbTextesParPeriode;
 	my @totalLang = 0;
 
+	my $datePeriode = "00";
 	my @langScore; #compte le nombre d'occurence par langue
 
 	for $i (1 .. $numberOfPeriod) { 
@@ -674,6 +674,7 @@ sub analyse_diachronique {
 			if($ind_periode >= $periode) {
 				$ind_periode = 0;
 				$num_periode++;
+				# $datePeriode .= "- $date_prec ; $date";
 			}
 		}
 		# nombre de fichiers traités / nombre total de fichier * 100, permet d'afficher une progression
@@ -731,7 +732,7 @@ sub analyse_diachronique {
 	for $i ( 0 .. $#langScore ) {		
    		for $j ( 0 .. $#{$langScore[$i]} ) {
    			if ($j > 0) {
-   				$percent = sprintf "%.2f", scalar( $langScore[$i][$j] / $totalLang[$j]);
+   				$percent = sprintf "%.3f", scalar( $langScore[$i][$j] / $totalLang[$j]);
 	   			print RES ("$percent;")
 	   		}
 	   		else {
@@ -740,6 +741,7 @@ sub analyse_diachronique {
     	}
    	print RES ("\n");
 	}
+	# print TRACE ("\n$datePeriode testestsetestest\n");
 	
 	close(TRACE);
 	close(RES);

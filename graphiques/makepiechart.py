@@ -24,16 +24,16 @@ def main(argv):
 	inputfile = ''
 	outputfile = ''
 	try:
-		opts, args = getopt.getopt(argv,"hi:o:n:",["ifile=","ofile=","numc="])
+		opts, args = getopt.getopt(argv,"hi:o:n:t:",["ifile=","ofile=","numc=","threshold="])
 	except getopt.GetoptError:
-		print('makepiechart.py -i <inputfile> -o <outputfile>\ninputfile : csv, outputfile is the name of the image file')
+		print('makepiechart.py -i <inputfile> -o <outputfile>\ninputfile -n <index of column>: csv, outputfile is the name of the image file')
 		sys.exit(2)
 	if len(sys.argv) < 2:
-		print('makepiechart.py -i <inputfile> -o <outputfile>\ninputfile : csv, outputfile is the name of the image file')
+		print('makepiechart.py -i <inputfile> -o <outputfile>\ninputfile -n <index of column>: csv, outputfile is the name of the image file')
 		sys.exit(2)
 	for opt, arg in opts:
 		if opt == '-h':
-			print('makepiechart.py -i <inputfile> -o <outputfile>\ninputfile : csv, outputfile is the name of the image file')
+			print('makepiechart.py -i <inputfile> -o <outputfile>\ninputfile -n <index of column>: csv, outputfile is the name of the image file')
 			sys.exit()
 		elif opt in ("-i", "--ifile"):
 			inputfile = arg
@@ -41,6 +41,8 @@ def main(argv):
 			outputfile = arg
 		elif opt in ("-n", "--numc"):
 			numcolumn = int(arg)
+		elif opt in ("-t", "--threshold"):
+			threshold = int(arg)
 	
 	db = pandas.read_csv(inputfile, index_col="Langue",sep=";")
 	bake_pie(db,numcolumn,threshold,outputfile)
