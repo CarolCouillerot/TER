@@ -7,6 +7,8 @@ import numpy as np
 pyplot.rcParams["figure.figsize"] = [10,10]
 from io import BytesIO
 
+threshold = 0.1
+
 # param df : dataframe à deux dimensions
 #       indcol : colonne sur laquelle créer le piechart
 #       threshold : seuil à partir duquel l'item est ajouté au piechart
@@ -22,7 +24,7 @@ def main(argv):
 	inputfile = ''
 	outputfile = ''
 	try:
-		opts, args = getopt.getopt(argv,"hi:o:",["ifile=","ofile="])
+		opts, args = getopt.getopt(argv,"hi:o:n:",["ifile=","ofile=","numc="])
 	except getopt.GetoptError:
 		print('makepiechart.py -i <inputfile> -o <outputfile>\ninputfile : csv, outputfile is the name of the image file')
 		sys.exit(2)
@@ -37,9 +39,11 @@ def main(argv):
 			inputfile = arg
 		elif opt in ("-o", "--ofile"):
 			outputfile = arg
+		elif opt in ("-n", "--numc"):
+			numcolumn = int(arg)
 	
 	db = pandas.read_csv(inputfile, index_col="Langue",sep=";")
-	bake_pie(db,0,0.1,outputfile)
+	bake_pie(db,numcolumn,threshold,outputfile)
 
 if __name__ == "__main__":
 	main(sys.argv[1:])
