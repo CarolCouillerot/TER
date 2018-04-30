@@ -15,11 +15,11 @@ my %res_langues;
 
 #concordance("corpus_ACL.txt");
 #traitement_paires("res_paires_complement.txt", "res_paires_complement2.txt");
-#pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
+pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
 #etude_comparative("textes_adresses.txt", "textes_adresses_entier.txt", "erreurs_lecture.txt");
-analyse_diachronique("textes_adresses.txt", 5, "counter_diachronique_10_ans.csv");
-#corpus_corpora("textes_adresses_entier.txt", "corpora_occurrences.txt");
-
+# analyse_diachronique("textes_adresses.txt", 5, "counter_diachronique_10_ans.csv");
+# corpus_corpora("textes_adresses.txt", "corpora_occurrences.txt");
+# clearCorporaOccurences("corpora_occurrences.txt","liste_corpus.txt");
 
 #----------------------------------------
 sub concordance {
@@ -257,9 +257,9 @@ sub lecture {
 		# comparable corpus
 		# corpus/corpora => corp\w+ (peu de mot commence par corp, surtout précédé des mots ci-dessus)
 		
-		while ($texte =~ /(Multilingual corp\w*)|(aligned parallel)|(aligned corp\w*)|(parallel corp\w*)|(comparable corp\w*)/gi) {
-			print TRACE ("\n\t:::: $1$2$3$4$5");
-		}
+		# while ($texte =~ /(Multilingual corp\w*)|(aligned parallel)|(aligned corp\w*)|(parallel corp\w*)|(comparable corp\w*)/gi) {
+		# 	print TRACE ("\n\t:::: $1$2$3$4$5");
+		# }
 		
 		#...................................................................
 		# Comptage des langues par texte
@@ -370,8 +370,11 @@ sub corpus_corpora {
 		
 		# corpus/corpora
 		
-		while ($texte =~ /(.{20} corpus.{20})|(.{20} corpora.{20})/gi) {
-			print TRACE ("\n\t:::: $1$2");
+		while ($texte =~ /(.{40} corpus)|(.{40} corpora)/gi) {
+			my $tmp = $1 . $2;
+			if($tmp =~ /[^\.] [A-Z]/) {
+				print TRACE ("\n$tmp");
+			}
 		}
 	}
 	print STDOUT ("\n$nb_textes textes traités");
@@ -741,7 +744,7 @@ sub analyse_diachronique {
     	}
    	print RES ("\n");
 	}
-	# print TRACE ("\n$datePeriode testestsetestest\n");
+	print TRACE ("\n$datePeriode \n");
 	
 	close(TRACE);
 	close(RES);
@@ -763,4 +766,78 @@ sub initTab {
 	}
 
 	return @tableau;
+}
+
+#--------------------------
+# Fonction qui nettoie les résultats sortis par la fonction corpus-corpora
+# en enlevant les lignes avec des noms de langues présent ou
+# des corpus déjà connus
+# params : fichier entrée : corpora_occurences.txt
+#							liste_corpus.txt
+#		fichier sortie : corpora_occurrences.txt
+sub clearCorporaOccurences {
+	my $donnees = $_[0];
+	my $fic_corpus = $_[1];
+	my $sortie = $donnees; 
+
+	my $text = "";
+	my $nb_langues = 0;
+	my @tab_corpus;
+	my %corpusPerText;
+	my $nb_corpus = 0;
+	my $line;
+
+	open(TRACE, ">trace.txt") || die "Je ne peux ouvrir le fichier trace.txt $!";
+	
+	#............................................................liste de langues
+	open(IN, "<langues5.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	while ($line = <IN>) {
+		if($line =~m /[a-z]/){ #élimine les lignes vides
+			chomp($line);
+			$tab_langues[$nb_langues] = $line;
+			print TRACE ("$nb_langues: $tab_langues[$nb_langues]\n");
+			$nb_langues++;
+		}
+	}
+	close(IN);
+
+	#............................................................liste de langues
+	open(IN, "<$fic_corpus")|| die "Je ne peux ouvrir le fichier $fic $!";
+	while ($line = <IN>) {
+		chomp($line);
+		$tab_corpus[$nb_corpus] = $line;
+		$nb_corpus++;
+		$corpusPerText{$line} = 0;
+	}
+	close(IN);
+
+	$nb_langues--;
+	$nb_corpus--;
+	# ................................................ traitement corpora_occurences
+	open(IN, "<$donnees ")|| die "Je ne peux ouvrir le fichier $donnees $!";
+	my $trouve = 0;
+	my $newTexte = 0;
+	while ($line = <IN>) {
+		if($line =~m /--------/) { 
+			for $j (0 .. $nb_corpus) {
+				if($text =~m / $tab_corpus[$j] /i) {
+					# print STDOUT ("$tab_corpus[$j]");
+					$corpusPerText{$tab_corpus[$j]}++;
+				}
+			}
+			$text = "";
+		}
+		else {
+			$text .= $line;
+		}
+	}
+	close(IN);
+
+	open(OUT, ">$sortie") || die "Je ne peux ouvrir le fichier $sortie !";
+	foreach  my $k (keys(%corpusPerText)) {
+		print OUT ("$k : $corpusPerText{$k}\n");
+	}
+
+	
+	close(TRACE);
 }

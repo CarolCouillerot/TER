@@ -7,7 +7,7 @@ import numpy as np
 pyplot.rcParams["figure.figsize"] = [10,10]
 from io import BytesIO
 
-threshold = 0.1
+
 
 # param df : dataframe à deux dimensions
 #       indcol : colonne sur laquelle créer le piechart
