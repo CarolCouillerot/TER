@@ -23,3 +23,18 @@ ax.set_xlabel("x axis units")
 ax.set_ylabel("y axis units")
 
 pylab.show()
+
+db = pandas.read_csv("counter_comparatif-ACL.csv", index_col="Langue",sep=";")
+
+db = db.sort_values(by=['elague'],ascending=False)
+db = db.iloc[0:10,:]
+
+db = read.csv("counter_ACL-LREC2.csv", sep=",", header=TRUE)
+db = db[1:20,1:3]
+ggplot(data=db, aes(x=Langue, y=Score, fill=Corpus)) + geom_bar(stat="identity", color="black", position=position_dodge())
+
+db2 = pandas.read_csv("counter_ACL-LREC.csv", index_col="Langue",sep=";")
+
+db2 = db.sort_values(by=['LREC'],ascending=False)
+db2 = db.iloc[0:10,:]
+
