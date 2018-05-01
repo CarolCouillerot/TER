@@ -148,180 +148,178 @@ sub lecture {
 	print("nb de fichiers : $nb_files\n");
 
 	#............................................................liste de langues
-	open(IN, "<langues5.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	open(IN, "<langues_all.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
 	while ($line = <IN>) {
 		if($line =~m /[a-z]/){ #élimine les lignes vides
 			chomp($line);
 			
-			$langue = "";
-			if($line =~m /^(.*)(\r|\n)$/){ # Pour se débarasser du retour à la ligne...
-				$langue = $1;
-			}
-			
-			#$langue = $line;
-			$tab_langues[$nb_langues] = $langue;
+			$tab_langues[$nb_langues] = $line;
 			$langScore[$nb_langues] = 0;
 			$nb_langues++;
 			
 			#initialisation du tableau de hashage de comptage des langues
-			$res_langues{$langue} = 0;
+			$res_langues{$line} = 0;
 		}
 	}
 	close(IN);
-	#............................................................liste de fausses langues
-	open(IN, "<fausses_langues.txt ")|| die "Je ne peux ouvrir le fichier $fic $!";
-	while ($line = <IN>) {
-		chop($line);
-		$langue = $line;
-		$tab_fausses_langues[$nb_fausses_langues] = $langue;
-		$nb_fausses_langues++;
-	}
-	close(IN);
-	#............................................................liste de pays
-	open(IN, "<pays.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
-	while ($line = <IN>) {
-		chomp($line);
-		if($line =~m /([a-zA-Z -]+)/){ # Juste pour se débarasser une bonne fois pour toute du retour à la ligne
-			$pays = $1;
-		}
-		
-		$tab_pays[$nb_pays] = $pays;
-		$nb_pays++;
-	}
-	close(IN);
-
-	$i = 0;
-	while ($i < $nb_langues) {
-		#print TRACE ("\n $i $tab_langues[$i]");
-		print RES (";$tab_langues[$i]");
-		$i++;
-	}
-	$i = 0;
-	while ($i < $nb_pays) {
-		#print TRACE ("\n $i $tab_pays[$i]");
-		print RES (";$tab_pays[$i]");
-		$i++;
-	}
-
-	open(IN, "<$donnees ")|| die "Je ne peux ouvrir le fichier $fic $!";
-
-	while ($line = <IN>) {
-		chop($line);
-		$fic = $line;
-		print TRACE ("\n\n-------------------------------------\n$fic");
-		print RES ("\n$fic");
-		my $tmp = scalar( ($nb_textes/$nb_files)*100); # nombre de fichiers traités / nombre total de fichier * 100, permet d'afficher une progression
-		print STDOUT "\rProgression : $tmp%"; # l'option \r permet à la progression de rester sur la même ligne du terminal. Pour cela, aucun autre print STDOUT doit être fait dans la boucle.
-
-		#............................................................traitement d'un texte
-		open(TEXT, "<$fic ")|| die "Je ne peux ouvrir le fichier $fic $!";
-		$texte = "";
-		$ref = "";
-		$ref_trouvees = 'false';
-		$nb_textes++;
-
-		while ($line = <TEXT>) {
-			chomp $line;
-			$texte .= " ".$line;
-		}
-		close(TEXT);
-		#print("\n");
-		
-		#print TRACE ("\n\n TEXTE : $texte");
-		#............................................................recherche des langues
-		#................ destruction d'expressions generatrices de bruit (fausses langues)
-		#$texte = $titre . "\n" . $texte; # TO-DO: récupérer le titre
-		$texte = "\n" . $texte; # TO-DO: récupérer le titre
-		print CORPUS ("\n\n$fic");
-		print CORPUS ("\n$texte");
-	
-		$i = 0;
-		$marque = "";
-		# boucle qui remplace une fausse langue par un espace
-		while ($i < $nb_fausses_langues) {
-			#print TRACE ("\n*** cherche $i '$tab_fausses_langues[$i]' \n dans : '$texte'");
-			$langue = $tab_fausses_langues[$i];
-			while ($texte =~m /(.*) $langue([ ,;?!].*)/i) {
-				$texte = $1." ".$2;
-				print TRACE ("\n	<= $langue");
-				#print RES ("\n	<= $langue");
-			}
-			$i++;
-		}
-		
-		#...................................................................
-		# Recherche de contexte concernant les corpus parallèles
-		
-		# Multilingual corpora
-		# aligned parallel corpora
-		# comparable corpus
-		# corpus/corpora => corp\w+ (peu de mot commence par corp, surtout précédé des mots ci-dessus)
-		
-		# while ($texte =~ /(Multilingual corp\w*)|(aligned parallel)|(aligned corp\w*)|(parallel corp\w*)|(comparable corp\w*)/gi) {
-		# 	print TRACE ("\n\t:::: $1$2$3$4$5");
-		# }
-		
-		#...................................................................
-		# Comptage des langues par texte
-		$i = 0;
-		while ($i < $nb_langues) {
-			#print TRACE ("\ncherche $i $tab_langues[$i] \n dans : '$texte'");
-			$langue = $tab_langues[$i];
-			if ($texte =~m / $langue[ ,;:?!~.!)-\/]+/i) {
-				print TRACE ("\n	=> $langue");
-				$marque = $i;
-				#print RES ("\n	=> $langue");
-			}
-			if ($marque ne "") {
-				print RES (";1");
-				$marque = "";
-				
-				# Incrémentation du score de la langue dans le tableau de hashage
-				$res_langues{$langue}++;
-				$langScore[$i]++; # autre essaie de liste de comptage
-			}
-			else {
-				print RES (";");
-				}
-			$i++;
-		}
-		
-		#............................................................recherche des pays
-		# $i = 0;
-		# $pays_trouve = 'false';
-		# while ($i < $nb_pays) {
-		#print TRACE ("\ncherche $i '$tab_pays[$i]' dans '$auteurs'");
-		# $pays = $tab_pays[$i];
-		# while ($auteurs =~m /(.*) $pays(.*)/i) {
-		# $auteurs = $1." ".$2;
-		# print TRACE ("\n	.=> $pays");
-		# $marque = $i;
-		# $pays_trouve = 'true';
-		# }
-		# if ($marque ne "") {
-		# print RES (";1");
-		# $marque = "";
-		# }
-		# else {
-		# print RES (";");
-		# }
-		# $i++;
-		# }
-		# if ($pays_trouve eq 'false') {
-		# print ERR ("\n\n$fic \nPas de pays pour '$auteurs'");
-		# }
-
-	}
-	print STDOUT ("\n$nb_textes textes traités");
-	print TRACE ("\n$nb_textes textes traités");
-	
-	open(my $counter, ">counter.csv") or die "impossible d'ouvrire le fichier counter.txt\n";
-
 	for ($i = 0; $i < $nb_langues ; $i++){
-		print $counter "$tab_langues[$i];$langScore[$i]\n";
+		print TRACE ("$tab_langues[$i]\n");
 	}
+	print TRACE ("nombre de langues : $nb_langues\n");
+	# #............................................................liste de fausses langues
+	# open(IN, "<fausses_langues.txt ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	# while ($line = <IN>) {
+	# 	chop($line);
+	# 	$langue = $line;
+	# 	$tab_fausses_langues[$nb_fausses_langues] = $langue;
+	# 	$nb_fausses_langues++;
+	# }
+	# close(IN);
+	# #............................................................liste de pays
+	# open(IN, "<pays.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	# while ($line = <IN>) {
+	# 	chomp($line);
+	# 	if($line =~m /([a-zA-Z -]+)/){ # Juste pour se débarasser une bonne fois pour toute du retour à la ligne
+	# 		$pays = $1;
+	# 	}
+		
+	# 	$tab_pays[$nb_pays] = $pays;
+	# 	$nb_pays++;
+	# }
+	# close(IN);
 
-	close($counter);
+	# $i = 0;
+	# while ($i < $nb_langues) {
+	# 	#print TRACE ("\n $i $tab_langues[$i]");
+	# 	print RES (";$tab_langues[$i]");
+	# 	$i++;
+	# }
+	# $i = 0;
+	# while ($i < $nb_pays) {
+	# 	#print TRACE ("\n $i $tab_pays[$i]");
+	# 	print RES (";$tab_pays[$i]");
+	# 	$i++;
+	# }
+
+	# open(IN, "<$donnees ")|| die "Je ne peux ouvrir le fichier $fic $!";
+
+	# while ($line = <IN>) {
+	# 	chop($line);
+	# 	$fic = $line;
+	# 	print TRACE ("\n\n-------------------------------------\n$fic");
+	# 	print RES ("\n$fic");
+	# 	my $tmp = scalar( ($nb_textes/$nb_files)*100); # nombre de fichiers traités / nombre total de fichier * 100, permet d'afficher une progression
+	# 	print STDOUT "\rProgression : $tmp%"; # l'option \r permet à la progression de rester sur la même ligne du terminal. Pour cela, aucun autre print STDOUT doit être fait dans la boucle.
+
+	# 	#............................................................traitement d'un texte
+	# 	open(TEXT, "<$fic ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	# 	$texte = "";
+	# 	$ref = "";
+	# 	$ref_trouvees = 'false';
+	# 	$nb_textes++;
+
+	# 	while ($line = <TEXT>) {
+	# 		chomp $line;
+	# 		$texte .= " ".$line;
+	# 	}
+	# 	close(TEXT);
+	# 	#print("\n");
+		
+	# 	#print TRACE ("\n\n TEXTE : $texte");
+	# 	#............................................................recherche des langues
+	# 	#................ destruction d'expressions generatrices de bruit (fausses langues)
+	# 	#$texte = $titre . "\n" . $texte; # TO-DO: récupérer le titre
+	# 	$texte = "\n" . $texte; # TO-DO: récupérer le titre
+	# 	print CORPUS ("\n\n$fic");
+	# 	print CORPUS ("\n$texte");
+	
+	# 	$i = 0;
+	# 	$marque = "";
+	# 	# boucle qui remplace une fausse langue par un espace
+	# 	while ($i < $nb_fausses_langues) {
+	# 		#print TRACE ("\n*** cherche $i '$tab_fausses_langues[$i]' \n dans : '$texte'");
+	# 		$langue = $tab_fausses_langues[$i];
+	# 		while ($texte =~m /(.*) $langue([ ,;?!].*)/i) {
+	# 			$texte = $1." ".$2;
+	# 			print TRACE ("\n	<= $langue");
+	# 			#print RES ("\n	<= $langue");
+	# 		}
+	# 		$i++;
+	# 	}
+		
+	# 	#...................................................................
+	# 	# Recherche de contexte concernant les corpus parallèles
+		
+	# 	# Multilingual corpora
+	# 	# aligned parallel corpora
+	# 	# comparable corpus
+	# 	# corpus/corpora => corp\w+ (peu de mot commence par corp, surtout précédé des mots ci-dessus)
+		
+	# 	# while ($texte =~ /(Multilingual corp\w*)|(aligned parallel)|(aligned corp\w*)|(parallel corp\w*)|(comparable corp\w*)/gi) {
+	# 	# 	print TRACE ("\n\t:::: $1$2$3$4$5");
+	# 	# }
+		
+	# 	#...................................................................
+	# 	# Comptage des langues par texte
+	# 	$i = 0;
+	# 	while ($i < $nb_langues) {
+	# 		#print TRACE ("\ncherche $i $tab_langues[$i] \n dans : '$texte'");
+	# 		$langue = $tab_langues[$i];
+	# 		if ($texte =~m / $langue[ ,;:?!~.!)-\/]+/i) {
+	# 			print TRACE ("\n	=> $langue");
+	# 			$marque = $i;
+	# 			#print RES ("\n	=> $langue");
+	# 		}
+	# 		if ($marque ne "") {
+	# 			print RES (";1");
+	# 			$marque = "";
+				
+	# 			# Incrémentation du score de la langue dans le tableau de hashage
+	# 			$res_langues{$langue}++;
+	# 			$langScore[$i]++; # autre essaie de liste de comptage
+	# 		}
+	# 		else {
+	# 			print RES (";");
+	# 			}
+	# 		$i++;
+	# 	}
+		
+	# 	#............................................................recherche des pays
+	# 	# $i = 0;
+	# 	# $pays_trouve = 'false';
+	# 	# while ($i < $nb_pays) {
+	# 	#print TRACE ("\ncherche $i '$tab_pays[$i]' dans '$auteurs'");
+	# 	# $pays = $tab_pays[$i];
+	# 	# while ($auteurs =~m /(.*) $pays(.*)/i) {
+	# 	# $auteurs = $1." ".$2;
+	# 	# print TRACE ("\n	.=> $pays");
+	# 	# $marque = $i;
+	# 	# $pays_trouve = 'true';
+	# 	# }
+	# 	# if ($marque ne "") {
+	# 	# print RES (";1");
+	# 	# $marque = "";
+	# 	# }
+	# 	# else {
+	# 	# print RES (";");
+	# 	# }
+	# 	# $i++;
+	# 	# }
+	# 	# if ($pays_trouve eq 'false') {
+	# 	# print ERR ("\n\n$fic \nPas de pays pour '$auteurs'");
+	# 	# }
+
+	# }
+	# print STDOUT ("\n$nb_textes textes traités");
+	# print TRACE ("\n$nb_textes textes traités");
+	
+	# open(my $counter, ">counter.csv") or die "impossible d'ouvrire le fichier counter.txt\n";
+
+	# for ($i = 0; $i < $nb_langues ; $i++){
+	# 	print $counter "$tab_langues[$i];$langScore[$i]\n";
+	# }
+
+	# close($counter);
 }
 
 #----------------------------------------
