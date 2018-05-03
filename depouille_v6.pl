@@ -15,11 +15,11 @@ my %res_langues;
 
 #concordance("corpus_ACL.txt");
 #traitement_paires("res_paires_complement.txt", "res_paires_complement2.txt");
-pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
+pretraitements("textes_adresses_echantillon.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
 #etude_comparative("textes_adresses.txt", "textes_adresses_entier.txt", "erreurs_lecture.txt");
 # analyse_diachronique("textes_adresses.txt", 5, "counter_diachronique_10_ans.csv");
 # corpus_corpora("textes_adresses.txt", "corpora_occurrences.txt");
-# clearCorporaOccurences("corpora_occurrences.txt","liste_corpus.txt");
+# clearCorporaOccurences("textes_adresses.txt","liste4.txt","corpora_occurrences.txt");
 
 #----------------------------------------
 sub concordance {
@@ -148,7 +148,7 @@ sub lecture {
 	print("nb de fichiers : $nb_files\n");
 
 	#............................................................liste de langues
-	open(IN, "<langues_all.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	open(IN, "<familles_lvl_1.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
 	while ($line = <IN>) {
 		if($line =~m /[a-z]/){ #élimine les lignes vides
 			chomp($line);
@@ -368,7 +368,7 @@ sub corpus_corpora {
 		
 		# corpus/corpora
 		
-		while ($texte =~ /(.{40} corpus)|(.{40} corpora)/gi) {
+		while ($texte =~ /(.{30} corpus.{15})|(.{30} corpora .{15})/gi) {
 			my $tmp = $1 . $2;
 			if($tmp =~ /[^\.] [A-Z]/) {
 				print TRACE ("\n$tmp");
@@ -770,68 +770,73 @@ sub initTab {
 # Fonction qui nettoie les résultats sortis par la fonction corpus-corpora
 # en enlevant les lignes avec des noms de langues présent ou
 # des corpus déjà connus
-# params : fichier entrée : corpora_occurences.txt
+# params : fichier entrée : textes_adresses.txt
 #							liste_corpus.txt
 #		fichier sortie : corpora_occurrences.txt
 sub clearCorporaOccurences {
 	my $donnees = $_[0];
 	my $fic_corpus = $_[1];
+	my $fic_sortie = $_[2];
 	my $sortie = $donnees; 
 
-	my $text = "";
+	my $nb_files = `wc -l $donnees | grep -o "[0-9]*"`;
+	my $fic;
+	my $texte = "";
 	my $nb_langues = 0;
+	my $nb_textes = 0;
 	my @tab_corpus;
 	my %corpusPerText;
 	my $nb_corpus = 0;
 	my $line;
 
 	open(TRACE, ">trace.txt") || die "Je ne peux ouvrir le fichier trace.txt $!";
-	
-	#............................................................liste de langues
-	open(IN, "<langues5.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
-	while ($line = <IN>) {
-		if($line =~m /[a-z]/){ #élimine les lignes vides
-			chomp($line);
-			$tab_langues[$nb_langues] = $line;
-			print TRACE ("$nb_langues: $tab_langues[$nb_langues]\n");
-			$nb_langues++;
-		}
-	}
-	close(IN);
 
 	#............................................................liste de langues
 	open(IN, "<$fic_corpus")|| die "Je ne peux ouvrir le fichier $fic $!";
 	while ($line = <IN>) {
 		chomp($line);
 		$tab_corpus[$nb_corpus] = $line;
+		print TRACE ("$line\n");
 		$nb_corpus++;
 		$corpusPerText{$line} = 0;
 	}
 	close(IN);
 
-	$nb_langues--;
 	$nb_corpus--;
 	# ................................................ traitement corpora_occurences
 	open(IN, "<$donnees ")|| die "Je ne peux ouvrir le fichier $donnees $!";
 	my $trouve = 0;
 	my $newTexte = 0;
 	while ($line = <IN>) {
-		if($line =~m /--------/) { 
-			for $j (0 .. $nb_corpus) {
-				if($text =~m / $tab_corpus[$j] /i) {
-					# print STDOUT ("$tab_corpus[$j]");
-					$corpusPerText{$tab_corpus[$j]}++;
-				}
+		chop($line);
+		$fic = $line;
+
+		my $tmp = sprintf "%.2f", scalar( ($nb_textes/$nb_files)*100); 
+		print STDOUT "\rProgression : $tmp%";
+
+		open(TEXT, "<$fic ")|| die "Je ne peux ouvrir le fichier $fic $!";
+		$nb_textes++;
+		$texte = "";
+
+		while ($line = <TEXT>) {
+			chomp $line;
+			$texte .= " ".$line;
+		}
+		close(TEXT);
+
+		for $j (0 .. $nb_corpus) {
+			if($texte =~m / $tab_corpus[$j]([ \.-]|[0-9])/i) {
+				$corpusPerText{$tab_corpus[$j]}++;
 			}
-			$text = "";
 		}
-		else {
-			$text .= $line;
-		}
+		
 	}
 	close(IN);
 
-	open(OUT, ">$sortie") || die "Je ne peux ouvrir le fichier $sortie !";
+
+
+
+	open(OUT, ">$fic_sortie") || die "Je ne peux ouvrir le fichier $sortie !";
 	foreach  my $k (keys(%corpusPerText)) {
 		print OUT ("$k : $corpusPerText{$k}\n");
 	}
