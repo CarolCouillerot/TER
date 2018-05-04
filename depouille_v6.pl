@@ -839,9 +839,6 @@ sub clearCorporaOccurences {
 	}
 	close(IN);
 
-
-
-
 	open(OUT, ">$fic_sortie") || die "Je ne peux ouvrir le fichier $sortie !";
 	foreach  my $k (keys(%corpusPerText)) {
 		print OUT ("$k : $corpusPerText{$k}\n");
