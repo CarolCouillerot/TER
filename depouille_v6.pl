@@ -704,10 +704,6 @@ sub analyse_diachronique {
 		}
 		close(TEXT);
 		
-		#............................................................recherche des langues
-		#................ destruction d'expressions generatrices de bruit (fausses langues)
-		
-	
 		$i = 0;
 		$marque = "";
 		# boucle qui remplace une fausse langue par un espace
