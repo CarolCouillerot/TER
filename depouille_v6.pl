@@ -148,17 +148,25 @@ sub lecture {
 	print("nb de fichiers : $nb_files\n");
 
 	#............................................................liste de langues
-	open(IN, "<familles_lvl_1.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
+	open(IN, "<langues5.csv ")|| die "Je ne peux ouvrir le fichier $fic $!";
 	while ($line = <IN>) {
 		if($line =~m /[a-z]/){ #élimine les lignes vides
 			chomp($line);
 			
-			$tab_langues[$nb_langues] = $line;
-			$langScore[$nb_langues] = 0;
-			$nb_langues++;
+			$langue = "";
+			if($line =~m /^(.*)(\r|\n)$/){ # Pour se débarasser du retour à la ligne...
+				$tab_langues[$nb_langues] = $1;
+				$nb_langues++;
+				$res_langues{$1} = 0;
+				$langScore[$nb_langues] = 0;
+			}else{
+				$tab_langues[$nb_langues] = $line;
+				$nb_langues++;
+				$res_langues{$line} = 0;
+				$langScore[$nb_langues] = 0;
+			}
 			
 			#initialisation du tableau de hashage de comptage des langues
-			$res_langues{$line} = 0;
 		}
 	}
 	close(IN);
@@ -439,6 +447,8 @@ sub lecture_comparative {
 			$langue = "";
 			if($line =~m /^(.*)(\r|\n)$/){ # Pour se débarasser du retour à la ligne...
 				$langue = $1;
+			}else{
+				$langue = $line;
 			}
 			
 			#$langue = $line;
