@@ -1,6 +1,5 @@
 #----------------------------------------
 # ROLE : lit les textes txt et cherche les langues
- # modif apres proposition JE
 #----------------------------------------
 # Active les avertissements de l'interpréteur
 use warnings;
