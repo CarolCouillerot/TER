@@ -14,7 +14,7 @@ my %res_langues;
 
 #concordance("corpus_ACL.txt");
 #traitement_paires("res_paires_complement.txt", "res_paires_complement2.txt");
-pretraitements("textes_adresses_echantillon.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
+pretraitements("textes_adresses.txt", "resultats_lecture.csv", "erreurs_lecture.txt", "corpus_lecture");
 #etude_comparative("textes_adresses.txt", "textes_adresses_entier.txt", "erreurs_lecture.txt");
 # analyse_diachronique("textes_adresses.txt", 5, "counter_diachronique_10_ans.csv");
 # corpus_corpora("textes_adresses.txt", "corpora_occurrences.txt");
